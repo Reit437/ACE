@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="codemirror/codemirror.min.css">
+    <style>
+        html, body { margin: 0; padding: 0; overflow: hidden; background: #fff; }
+        .CodeMirror { height: auto; font-family: monospace; font-size: 16px; }
+    </style>
+</head>
+<body>
+<!-- Убрали хардкод текста, оставили пустое поле -->
+<textarea id="code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+
+<script src="codemirror/codemirror.min.js"></script>
+<script src="codemirror/python.min.js"></script>
+<script>
+    var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        mode: "python",
+        lineNumbers: true,
+        indentUnit: 4,
+        lineWrapping: false,
+        extraKeys: {
+            "Backspace": function(cm) {
+                if (!cm.somethingSelected()) {
+                    var cur = cm.getCursor();
+                    if (cur.ch === 0 && cur.line > 0) {
+                        var prevLine = cur.line - 1;
+                        var prevLen = cm.getLine(prevLine).length;
+                        cm.replaceRange("", {line: prevLine, ch: prevLen}, {line: cur.line, ch: 0});
+                        cm.setCursor({line: prevLine, ch: prevLen});
+                        return;
+                    }
+                }
+                cm.execCommand("delCharBefore");
+            }
+        }
+    });
+
+    function fixHeight() {
+        var height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        if (height > 0) {
+            editor.setSize("100%", height + "px");
+        }
+    }
+
+    window.addEventListener("resize", fixHeight);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", fixHeight);
+    }
+    setTimeout(fixHeight, 100);
+
+    // Функция для загрузки кода из Kotlin
+    function loadCode(base64Code) {
+        try {
+            var code = decodeURIComponent(escape(atob(base64Code)));
+            editor.setValue(code);
+        } catch (e) {
+            console.log("Ошибка загрузки кода: " + e);
+        }
+    }
+</script>
+</body>
+</html>
